@@ -77,7 +77,7 @@ def main() -> None:
     for tpl_name, out_name in PAGES.items():
         tpl = env.get_template(tpl_name)
         html = tpl.render(
-            title="SWE-bench", 
+            title="LBC-bench", 
             leaderboards=leaderboards["leaderboards"] if isinstance(leaderboards, dict) else leaderboards,
             press=press,
             all_tags=all_tags,  # Keep for backward compatibility

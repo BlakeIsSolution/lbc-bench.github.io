@@ -289,11 +289,12 @@ function updateTable() {
     
     const tableRows = visibleLeaderboard.querySelectorAll('.data-table tbody tr:not(.no-results)');
     let visibleRowCount = 0;
+
+    const searchString = document.querySelector("#leaderboard-search-input").value;
     
     tableRows.forEach(row => {
         // Show row by default
         let showRow = true;
-        
         // Check filters
         for (const filter of activeFilters) {
             if (row.getAttribute(`data-${filter}`) !== 'true') {
@@ -312,6 +313,13 @@ function updateTable() {
                 if (!rowTags.some(tag => selectedTags.includes(tag))) {
                     showRow = false;
                 }
+            }
+        }
+
+        if (showRow && searchString.length != 0) {
+            const name = row.getAttribute(`data-name`);
+            if (!name.includes(searchString)) {
+                showRow = false;
             }
         }
         
@@ -359,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize Tag Filters Dropdown
     tagFiltersDropdown = new MultiSelectDropdown('tag-filters', {
-        searchable: true,
+        searchable: false,
         allOptionText: 'All Tags',
         summaryPrefix: '',
         noSelectionText: 'No Tags',
@@ -367,6 +375,12 @@ document.addEventListener('DOMContentLoaded', function() {
         onSelectionChange: (selectedTags) => {
             updateTable(); // Just update table when tag selection changes
         }
+    });
+
+    const searchInput = document.getElementById("leaderboard-search-input");
+
+    searchInput.addEventListener("input", function (event) {
+        updateTable();
     });
     
     // Initialize with tags for the default leaderboard (bash-only)
