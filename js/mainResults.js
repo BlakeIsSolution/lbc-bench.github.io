@@ -111,6 +111,7 @@ function renderLeaderboardTable(leaderboard) {
                                     data-os_system="${item.os_system ? 'true' : 'false'}"
                                     data-checked="${item.checked ? 'true' : 'false'}"
                                     data-tags="${item.tags ? item.tags.join(',') : ''}"
+                                    data-name="${item.name}"
                                 >
                                     <td>
                                         <div class="flex items-center gap-1">
@@ -281,32 +282,6 @@ function createTableBody(data, split, model, keys, table) {
             }
         });
     }
-}
-
-function updateMainResults(split, model) {
-    const url = `https://raw.githubusercontent.com/swe-bench/experiments/main/evaluation/${split}/${model}/results/results.json`;
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.resolved) {
-                const resolved = data.resolved.length;
-                                const total = 
-                    split === 'lite' ? 300 : 
-                    split === 'verified' ? 500 : 
-                    split === 'multimodal' ? 517 : 
-                    split === 'bash-only' ? 500 : 2294;
-                const percentResolved = (resolved / total * 100).toFixed(2);
-                const resolvedElement = document.getElementById('selectedResolved');
-                resolvedElement.textContent = percentResolved;
-            } else {
-                console.error('Invalid results data format:', data);
-                document.getElementById('selectedResolved').textContent = 'N/A';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching the results data:', error);
-            document.getElementById('selectedResolved').textContent = 'Error';
-        });
 }
 
 function openLeaderboard(leaderboardName) {
