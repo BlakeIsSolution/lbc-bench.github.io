@@ -109,7 +109,8 @@ class MultiSelectDropdown {
             const option = document.createElement('div');
             option.className = 'multiselect-option';
             // Use canonical display names for main filters, raw values for tags
-            const displayName = filterDisplayNames[item] || item;
+            // const displayName = filterDisplayNames[item] || item;
+            const displayName = item;
             option.innerHTML = `<label><input type="checkbox" class="checkbox-item" value="${item}" checked> ${displayName}</label>`;
             optionsContainer.appendChild(option);
         });
@@ -137,7 +138,13 @@ class MultiSelectDropdown {
     
     closeOtherDropdowns() {
         // Close all other dropdown instances
-        [window.mainFiltersDropdown, window.tagFiltersDropdown].forEach(dropdown => {
+        // [window.mainFiltersDropdown, window.tagFiltersDropdown].forEach(dropdown => {
+        //     if (dropdown && dropdown !== this && dropdown.dropdownForm.style.display === 'block') {
+        //         dropdown.closeDropdown();
+        //     }
+        // });
+
+        [window.tagFiltersDropdown].forEach(dropdown => {
             if (dropdown && dropdown !== this && dropdown.dropdownForm.style.display === 'block') {
                 dropdown.closeDropdown();
             }
@@ -196,7 +203,8 @@ class MultiSelectDropdown {
             text = this.options.allSelectedText;
         } else if (selected.length === 1) {
             // Use display name mapping for main filters dropdown
-            const displayName = filterDisplayNames[selected[0]] || selected[0];
+            // const displayName = filterDisplayNames[selected[0]] || selected[0];
+            const displayName = selected[0];
             text = `${this.options.summaryPrefix}${displayName}`.trim();
         } else {
             text = `${selected.length} ${this.options.summaryPrefix}Selected`.trim();
@@ -234,11 +242,11 @@ class MultiSelectDropdown {
 const activeFilters = new Set(['os_system']);
 
 // Mapping from filter codenames to display names
-const filterDisplayNames = {
-    'os_system': 'Open Scaffold',
-    'os_model': 'Open Weights', 
-    'checked': 'Checked'
-};
+// const filterDisplayNames = {
+//     'os_system': 'Open Scaffold',
+//     'os_model': 'Open Weights', 
+//     'checked': 'Checked'
+// };
 
 // Global data
 let leaderboardTagsData = {};
@@ -270,11 +278,11 @@ window.updateTagsForLeaderboard = updateTagsForLeaderboard;
 
 // Function to show/hide filter elements based on leaderboard type
 function updateFilterVisibility(leaderboardName) {
-    const mainFiltersContainer = document.getElementById('main-filters');
+    // const mainFiltersContainer = document.getElementById('main-filters');
     const tagFiltersContainer = document.getElementById('tag-filters');
     
     // Show all filters for all leaderboards - consistent interface
-    if (mainFiltersContainer) mainFiltersContainer.style.display = '';
+    // if (mainFiltersContainer) mainFiltersContainer.style.display = '';
     if (tagFiltersContainer) tagFiltersContainer.style.display = '';
 }
 
@@ -296,12 +304,12 @@ function updateTable() {
         // Show row by default
         let showRow = true;
         // Check filters
-        for (const filter of activeFilters) {
-            if (row.getAttribute(`data-${filter}`) !== 'true') {
-                showRow = false;
-                break;
-            }
-        }
+        // for (const filter of activeFilters) {
+        //     if (row.getAttribute(`data-${filter}`) !== 'true') {
+        //         showRow = false;
+        //         break;
+        //     }
+        // }
         
         // Check tag filter
         if (showRow && window.tagFiltersDropdown) {
@@ -338,32 +346,32 @@ function updateTable() {
 }
 
 // Updated Filter Button Logic
-function updateActiveFilters(selectedFilters) {
-    activeFilters.clear();
-    selectedFilters.forEach(filter => activeFilters.add(filter));
-    updateTable();
-}
+// function updateActiveFilters(selectedFilters) {
+//     activeFilters.clear();
+//     selectedFilters.forEach(filter => activeFilters.add(filter));
+//     updateTable();
+// }
 
 // Global dropdown instances
-let mainFiltersDropdown = null;
+// let mainFiltersDropdown = null;
 let tagFiltersDropdown = null;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Main Filters Dropdown with dynamic options
-    mainFiltersDropdown = new MultiSelectDropdown('main-filters', {
-        searchable: false,
-        allOptionText: 'All Filters',
-        summaryPrefix: '',
-        noSelectionText: 'No Filters',
-        allSelectedText: 'All Filters',
-        defaultSelected: ['os_system'], // Default to Open Scaffold checked
-        onSelectionChange: updateActiveFilters
-    });
+    // mainFiltersDropdown = new MultiSelectDropdown('main-filters', {
+    //     searchable: false,
+    //     allOptionText: 'All Filters',
+    //     summaryPrefix: '',
+    //     noSelectionText: 'No Filters',
+    //     allSelectedText: 'All Filters',
+    //     defaultSelected: ['os_system'], // Default to Open Scaffold checked
+    //     onSelectionChange: updateActiveFilters
+    // });
     
     // Dynamically rebuild the main filters dropdown with canonical names
-    const filterOptions = Object.keys(filterDisplayNames);
-    mainFiltersDropdown.rebuildOptions(filterOptions);
+    // const filterOptions = Object.keys(filterDisplayNames);
+    // mainFiltersDropdown.rebuildOptions(filterOptions);
     
     // Initialize Tag Filters Dropdown
     tagFiltersDropdown = new MultiSelectDropdown('tag-filters', {
@@ -383,19 +391,19 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTable();
     });
     
-    // Initialize with tags for the default leaderboard (bash-only)
-    updateTagsForLeaderboard('bash-only');
+    // Initialize with tags for the default leaderboard (code-generation-limited-context)
+    updateTagsForLeaderboard('code-generation-limited-context');
     
     // Set initial selection for main filters
-    if (mainFiltersDropdown) {
-        mainFiltersDropdown.setSelectedValues(['os_system']);
-    }
+    // if (mainFiltersDropdown) {
+    //     mainFiltersDropdown.setSelectedValues(['os_system']);
+    // }
     
     // Make both dropdowns globally accessible
-    window.mainFiltersDropdown = mainFiltersDropdown;
+    // window.mainFiltersDropdown = mainFiltersDropdown;
     window.tagFiltersDropdown = tagFiltersDropdown;
     
-    // Check for initial leaderboard visibility (in case landing directly on bash-only)
+    // Check for initial leaderboard visibility (in case landing directly on code-generation-limited-context)
     setTimeout(() => {
         const activeLeaderboard = document.querySelector('.tabcontent.active');
         if (activeLeaderboard) {
@@ -413,11 +421,9 @@ function updateLeaderboardDescription(leaderboardName) {
     if (!textContainer) return;
     
     const descriptions = {
-        'bash-only': '<em>Bash Only</em> evaluates all LMs with a <a href="https://github.com/SWE-agent/mini-swe-agent">minimal agent</a> on SWE-bench Verified (<a href="bash-only.html">details</a>)',
-        'lite': '<em>Lite</em> is a subset of 300 instances for less costly evaluation (<a href="lite.html">details</a>)',
-        'verified': '<em>Verified</em> is a human-filtered subset of 500 instances (<a href="https://openai.com/index/introducing-swe-bench-verified/">details</a>)',
-        'test': '<em>Full</em> is a large benchmark made of 2000 instances (<a href="original.html">details</a>)',
-        'multimodal': '<em>Multimodal</em> features issues with visual elements (<a href="multimodal.html">details</a>)',
+        'code-generation-limited-context': '<em>Code Generation Limited Context</em>',
+        'code-comprehension': '<em>Code Comprehension</em>',
+        'code-generation-heavy-context': '<em>Code Generation Heavy Context</em>',
     };
     
     const normalizedName = leaderboardName.toLowerCase();

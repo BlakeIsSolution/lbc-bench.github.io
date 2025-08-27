@@ -16,7 +16,7 @@ const statusToNaturalLanguage = {
 const loadedLeaderboards = new Set();
 let leaderboardData = null;
 
-const sortState = { field: 'resolved', direction: 'desc' };
+const sortState = { field: 'resolved_full', direction: 'desc' };
 
 function loadLeaderboardData() {
     if (!leaderboardData) {
@@ -33,8 +33,12 @@ function sortItems(a, b, field, direction) {
         switch (field) {
             case 'name':
                 return (item.name || '').toLowerCase();
-            case 'resolved':
-                return parseFloat(item.resolved) || 0;
+            case 'resolved_full':
+                return parseFloat(item.resolved_full) || 0;
+            case 'resolved_oss':
+                return parseFloat(item.resolved_oss) || 0;
+            case 'cost':
+                return parseFloat(item.cost) || 0;
             case 'org':
                 return getOrgName(item);
             case 'date':
@@ -80,7 +84,7 @@ function getDefaultSortDirection(field) {
 
 function renderLeaderboardTable(leaderboard) {
     const container = document.getElementById('leaderboard-container');
-    const isBashOnly = leaderboard.name.toLowerCase() === 'bash-only';
+    // const isBashOnly = leaderboard.name.toLowerCase() === 'code-generation-limited-context';
     
     const results = leaderboard.results
         .filter(item => !item.warning)
@@ -95,20 +99,20 @@ function renderLeaderboardTable(leaderboard) {
                     <thead>
                         <tr>
                             <th class="sortable" data-sort="name">Model</th>
-                            <th class="sortable" data-sort="resolved">% Resolved</th>
+                            <th class="sortable" data-sort="resolved_full">% Resolved Full</th>
+                            <th class="sortable" data-sort="resolved_oss">% Resolved OSS</th>
                             <th class="sortable" data-sort="org">Org</th>
+                            <th class="sortable" data-sort="cost">Cost</th>
                             <th class="sortable" data-sort="date">Date</th>
                             <th class="sortable" data-sort="logs">Logs</th>
                             <th class="sortable" data-sort="trajs">Trajs</th>
                             <th class="sortable" data-sort="site">Site</th>
-                            ${isBashOnly ? '<th class="sortable" data-sort="release">Release</th>' : ''}
+                            <th class="sortable" data-sort="release">Release</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${results.map(item => `
                                 <tr
-                                    data-os_model="${item.os_model ? 'true' : 'false'}"
-                                    data-os_system="${item.os_system ? 'true' : 'false'}"
                                     data-checked="${item.checked ? 'true' : 'false'}"
                                     data-tags="${item.tags ? item.tags.join(',') : ''}"
                                     data-name="${item.name}"
@@ -116,14 +120,13 @@ function renderLeaderboardTable(leaderboard) {
                                     <td>
                                         <div class="flex items-center gap-1">
                                             <div class="model-badges">
-                                                ${item.date >= "2025-06-25" ? '<span>🆕</span>' : ''}
-                                                ${item.oss ? '<span>🤠</span>' : ''}
-                                                ${item.checked ? '<span title="The agent run was performed by or directly verified by the SWE-bench team">✅</span>' : ''}
+                                                ${item.checked ? '<span title="The agent run was performed by or directly verified by the LBC-bench team">✅</span>' : ''}
                                             </div>
                                             <span class="model-name font-mono fw-medium">${item.name}</span>
                                         </div>
                                     </td>
-                                    <td><span class="number fw-medium text-primary">${parseFloat(item.resolved).toFixed(2)}</span></td>
+                                    <td><span class="number fw-medium text-primary">${parseFloat(item.resolved_full).toFixed(2)}</span></td>
+                                    <td><span class="number fw-medium text-primary">${parseFloat(item.resolved_oss).toFixed(2)}</span></td>
                                     <td>
                                         ${item.logo && item.logo.length > 0 ? `
                                             <div style="display: flex; align-items: center;">
@@ -131,6 +134,7 @@ function renderLeaderboardTable(leaderboard) {
                                             </div>
                                         ` : '-'}
                                     </td>
+                                    <td><span class="number fw-medium text-primary">${parseFloat(item.cost).toFixed(2)}</span></td>
                                     <td><span class="label-date text-muted">${item.date}</span></td>
                                     <td class="centered-text text-center">
                                         ${item.logs ? '<span class="text-success">✓</span>' : '<span class="text-muted">-</span>'}
@@ -141,11 +145,11 @@ function renderLeaderboardTable(leaderboard) {
                                     <td class="centered-text text-center">
                                         ${item.site ? `<a href="${item.site}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i></a>` : '<span class="text-muted">-</span>'}
                                     </td>
-                                    ${isBashOnly ? `<td><span class="text-muted font-mono">${item['mini-swe-agent_version'] || '-'}</span></td>` : ''}
+                                    <td><span class="text-muted font-mono">-</span></td>
                                 </tr>
                             `).join('')}
                         <tr class="no-results" style="display: none;">
-                            <td colspan="${isBashOnly ? '8' : '7'}" class="text-center">
+                            <td colspan="10" class="text-center">
                                 No entries match the selected filters. Try adjusting your filters.
                             </td>
                         </tr>
@@ -206,32 +210,6 @@ function updateSortIndicators() {
     });
 }
 
-function updateLogViewer(inst_id, split, model) {
-    if (inst_id == 'No Instance Selected') {
-        const logViewer = document.querySelector('#log-viewer');
-        logViewer.innerHTML = 'No instance selected.';
-        return;
-    }
-    const url = `https://raw.githubusercontent.com/swe-bench/experiments/main/evaluation/${split}/${model}/logs/${inst_id}.${model}.eval.log`;
-    fetch(url)
-        .then(response => response.text())
-        .then(data => {
-            const logViewer = document.querySelector('#log-viewer');
-            logViewer.innerHTML = '';
-
-            const inst_p = document.createElement('p');
-            inst_p.textContent = `Instance ID: ${inst_id}`;
-            logViewer.appendChild(inst_p);
-
-            const pre = document.createElement('pre');
-            pre.textContent = data;
-            logViewer.appendChild(pre);
-        })
-        .catch(error => {
-            console.error('Error fetching the JSON data:', error);
-        });
-}
-
 function createTableHeader(keys, table) {
     const headerRowWrapper = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -275,9 +253,6 @@ function createTableBody(data, split, model, keys, table) {
             if (!(status === 'no_generation' || status === 'generated')) {
                 const divs = document.getElementsByClassName(id);
                 Array.from(divs).forEach(div => {
-                    div.addEventListener('click', () => {
-                        updateLogViewer(id, split, model);
-                    });
                 });
             }
         });
@@ -358,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentPage === 'index' && window.location.hash) {
             const currentHash = window.location.hash.substring(1);
             
-            if (linkPage === currentHash && !['bash-only', 'verified', 'lite', 'test', 'multimodal'].includes(currentHash.toLowerCase())) {
+            if (linkPage === currentHash && !['code-generation-limited-context', 'code-comprehension', 'code-generation-heavy-context'].includes(currentHash)) {
                 link.classList.add('active');
             }
         }
@@ -374,12 +349,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load initial tab based on hash or default to Verified (mini-SWE-agent)
     const hash = window.location.hash.slice(1).toLowerCase();
-    const validTabs = ['bash-only', 'verified', 'lite', 'test', 'multimodal'];
+    const validTabs = ['code-generation-limited-context', 'code-comprehension', 'code-generation-heavy-context'];
     
     if (hash && validTabs.includes(hash)) {
         const tabName = hash.charAt(0).toUpperCase() + hash.slice(1);
         openLeaderboard(tabName);
     } else {
-        openLeaderboard('bash-only');
+        openLeaderboard('code-generation-limited-context');
     }
 });
