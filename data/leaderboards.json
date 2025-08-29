@@ -16,7 +16,7 @@
             "date": "2025-05-22",
             "logs": "s3://swe-bench-experiments/test/20250522_amazon-q-developer-agent-20250405-dev/logs",
             "trajs": "s3://swe-bench-experiments/test/20250522_amazon-q-developer-agent-20250405-dev/trajs",
-            "checked": false,
+            "checked": true,
             "tags": [
                 "Open Source Tool: Verilator",
                 "Commercial Tool: Xcellium",
