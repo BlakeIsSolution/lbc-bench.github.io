@@ -1,16 +1,10 @@
-<p align="center">
-  <a href="https://github.com/princeton-nlp/Llamao">
-    <img src="img/swe-bench-banner-bg.svg" width="50%" alt="swellama logo" />
-  </a>
-</p>
+# LBC-bench Website
 
-# SWE-bench Website
-
-The SWE-bench website for leaderboards and project information.
+The LBC-bench website for leaderboards and project information.
 
 ## Table of Contents
 
-- [SWE-bench Website](#swe-bench-website)
+- [LBC-bench Website](#lbc-bench-website)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Getting Started](#getting-started)
@@ -34,7 +28,7 @@ The SWE-bench website for leaderboards and project information.
 
 ## Overview
 
-This is the codebase for the [SWE-bench website](https://www.swebench.com), which showcases leaderboards for the SWE-bench benchmark. SWE-bench tests systems' ability to solve GitHub issues automatically.
+This is the codebase for the [LBC-bench website](https://www.lbcbench.com), which showcases leaderboards for the LBC-bench benchmark. LBC-bench tests systems' ability to solve GitHub issues automatically.
 
 The site is built using:
 - Jinja2 for HTML templating
@@ -55,8 +49,8 @@ The site is statically generated and can be hosted on GitHub Pages or any other 
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/swe-bench/swe-bench.github.io.git
-   cd swe-bench.github.io
+   https://github.com/BlakeIsSolution/lbc-bench.github.io
+   cd lbc-bench.github.io
    ```
 
 2. Install dependencies (uv will automatically create and manage the virtual environment):
@@ -160,7 +154,7 @@ The leaderboard data follows a specific flow from JSON to rendered HTML:
    
    # Passed to templates during rendering
    html = tpl.render(
-       title="SWE-bench", 
+       title="LBC-bench", 
        leaderboards=leaderboards["leaderboards"]
    )
    ```
@@ -286,7 +280,7 @@ To update the leaderboard data:
            // More entries...
          ]
        },
-       // More leaderboards (Verified, Lite, Multimodal)...
+       // More leaderboards (code-generation-limited-context, code-comprehension, code-generation-heavy-context)...
      ]
    }
    ```
