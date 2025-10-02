@@ -2,12 +2,81 @@
 import json
 import pathlib
 import shutil
+import sys
+from jsonschema import validate, ValidationError
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 ROOT = pathlib.Path(__file__).parent
 TEMPLATES = ROOT / "templates"
 DIST = ROOT / "dist"
+
+# Define the JSON schema for validation
+LEADERBOARDS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "leaderboards": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "logo": {
+                                    "type": "array",
+                                    "items": {"type": "string"}
+                                },
+                                "site": {"type": "string"},
+                                "folder": {"type": "string"},
+                                "cost": {"type": "number"},
+                                "resolved_full": {"type": "number"},
+                                "resolved_oss": {"type": "number"},
+                                "date": {"type": "string"},
+                                "logs": {"type": "string"},
+                                "trajs": {"type": "string"},
+                                "checked": {"type": "boolean"},
+                                "tags": {
+                                    "type": "array",
+                                    "items": {"type": "string"}
+                                },
+                                "warning": {"type": ["string", "null"]}
+                            },
+                            "required": [
+                                "name", "logo", "site", "folder", "cost", 
+                                "resolved_full", "resolved_oss", "date", 
+                                "logs", "trajs", "checked", "tags", "warning"
+                            ],
+                            "additionalProperties": False
+                        }
+                    }
+                },
+                "required": ["name", "results"],
+                "additionalProperties": False
+            }
+        }
+    },
+    "required": ["leaderboards"],
+    "additionalProperties": False
+}
+
+def validate_leaderboards_data(data):
+    """Validate the leaderboards data against the schema"""
+    try:
+        validate(instance=data, schema=LEADERBOARDS_SCHEMA)
+        print("✓ leaderboards.json format is valid")
+        return True
+    except ValidationError as e:
+        print(f"✗ Validation error in leaderboards.json: {e.message}")
+        print(f"Path: {' -> '.join(str(p) for p in e.path)}")
+        return False
+    except Exception as e:
+        print(f"✗ Unexpected error during validation: {e}")
+        return False
 
 def get_pages():
     pages = {}
@@ -22,6 +91,19 @@ PAGES = get_pages()
 
 
 def main() -> None:
+    # Load and validate data first
+    try:
+        with open(ROOT / "data/leaderboards.json", "r") as f:
+            leaderboards = json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError) as e:
+        print(f"✗ Error loading leaderboards.json: {e}")
+        sys.exit(1)
+    
+    # Validate the data format
+    if not validate_leaderboards_data(leaderboards):
+        print("Build failed due to invalid data format")
+        sys.exit(1)
+    
     # set up Jinja environment
     env = Environment(
         loader=FileSystemLoader(TEMPLATES),
